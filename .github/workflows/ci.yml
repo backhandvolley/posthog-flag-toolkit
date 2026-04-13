@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test:coverage
+      - run: npm run build
+      - run: npm run check-exports
+
+      - name: Upload coverage
+        if: matrix.node-version == 20 && github.event_name == 'pull_request'
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage/lcov.info
+          fail_ci_if_error: false
+
+  pkg-size:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Check package size
+        run: |
+          npx npm-packlist | sort
+          SIZE=$(npm pack --dry-run 2>&1 | grep 'package size' | awk '{print $4, $5}')
+          echo "Package size: $SIZE"
+
+  changeset-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Check for changeset
+        run: |
+          npx changeset status --since=origin/main 2>&1 || {
+            echo ""
+            echo "No changeset found. If this PR should trigger a release,"
+            echo "run 'npx changeset' and commit the generated file."
+            echo ""
+            echo "For PRs that don't need a release (docs, CI, refactors),"
+            echo "run 'npx changeset --empty' to add an empty changeset."
+            exit 1
+          }
