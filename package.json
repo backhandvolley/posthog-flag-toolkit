@@ -86,7 +86,7 @@
     "@biomejs/biome": "^2.4.11",
     "@changesets/changelog-github": "^0.6.0",
     "@changesets/cli": "^2.30.0",
-    "@types/node": "^22.15.2",
+    "@types/node": "^25.6.0",
     "@vitest/coverage-v8": "^3.2.4",
     "inngest": "^3.31.0",
     "lefthook": "^2.1.5",
