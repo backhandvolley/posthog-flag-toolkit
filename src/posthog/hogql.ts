@@ -55,7 +55,7 @@ export async function queryCohortMetrics(params: {
   }
 
   const baseUrl = config.baseUrl ?? "https://us.posthog.com";
-  const variantProp = `properties.$feature/${flagKey}`;
+  const variantProp = `properties[\`$feature/${flagKey}\`]`;
 
   const hogql = `
     SELECT

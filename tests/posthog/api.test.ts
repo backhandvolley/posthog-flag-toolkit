@@ -174,6 +174,9 @@ describe("HogQL flag key sanitization", () => {
         windowEnd: new Date(),
       });
       expect(result.treatment.eventCount).toBe(0);
+
+      const body = JSON.parse((globalThis.fetch as any).mock.calls[0][1].body);
+      expect(body.query.query).toContain("properties[`$feature/release_studio_my-feature_v2`]");
     } finally {
       globalThis.fetch = originalFetch;
     }
