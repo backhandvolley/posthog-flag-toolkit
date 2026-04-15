@@ -1,6 +1,6 @@
 {
   "name": "posthog-flag-toolkit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Type-safe feature flag registry, sync, release tracking, and auto-rollback guardian for PostHog",
   "type": "module",
   "main": "./dist/index.cjs",
