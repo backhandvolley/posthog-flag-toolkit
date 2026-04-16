@@ -55,6 +55,14 @@ export async function queryCohortMetrics(params: {
   }
 
   const baseUrl = config.baseUrl ?? "https://us.posthog.com";
+
+  const zero: CohortMetrics = {
+    eventCount: 0,
+    uniqueUsers: 0,
+    errorRate: null,
+    publishSuccessRate: null,
+  };
+
   const variantProp = `properties[\`$feature/${flagKey}\`]`;
 
   const hogql = `
@@ -83,21 +91,20 @@ export async function queryCohortMetrics(params: {
     }),
   });
   if (!res.ok) {
-    throw new Error(
-      `PostHog HogQL query failed for ${flagKey}: ${res.status} ${await res.text().catch(() => "")}`,
-    );
+    const body = await res.text().catch(() => "");
+    if (res.status === 400 && body.includes("Unable to resolve field")) {
+      return {
+        treatment: { ...zero },
+        control: { ...zero },
+      };
+    }
+    throw new Error(`PostHog HogQL query failed for ${flagKey}: ${res.status} ${body}`);
   }
 
   const data = (await res.json()) as {
     results: Array<[string, number, number, number, number, number]>;
   };
 
-  const zero: CohortMetrics = {
-    eventCount: 0,
-    uniqueUsers: 0,
-    errorRate: null,
-    publishSuccessRate: null,
-  };
   const metrics: EvaluationMetrics = {
     treatment: { ...zero },
     control: { ...zero },
